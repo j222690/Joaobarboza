@@ -1,0 +1,49 @@
+.admin-root { min-height: 100vh; background: radial-gradient(120% 80% at 80% 0%, #161c52 0%, #0b0f2e 60%); color: #eef0f6; font-size: 14px; }
+.login-wrap { min-height: 100vh; display: grid; place-items: center; padding: 20px; }
+.login-card { width: 100%; max-width: 360px; background: rgba(20, 26, 74, 0.7); border: 1px solid rgba(184, 156, 94, 0.5); border-radius: 12px; padding: 32px 26px; display: flex; flex-direction: column; gap: 12px; text-align: center; align-items: center; box-shadow: 0 20px 60px rgba(0,0,0,.4); }
+.login-card h1 { font-size: 20px; margin: 6px 0 0; }
+.login-card p { color: rgba(238,240,246,.7); }
+.login-card input { width: 100%; font: inherit; font-size: 16px; padding: 11px 14px; border-radius: 6px; border: 1px solid #b89c5e; background: rgba(11,15,46,.6); color: #fff; outline: none; }
+.login-card button { width: 100%; font: inherit; font-weight: 600; font-size: 15px; padding: 11px; border-radius: 6px; border: 0; background: #b89c5e; color: #0b0f2e; cursor: pointer; }
+.login-card button:disabled { opacity: .6; cursor: not-allowed; }
+.login-error { color: #ffb4a3 !important; font-size: 13px; }
+
+.dash { padding: 24px clamp(12px, 3vw, 40px) 60px; }
+.dash-head { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.dash-brand { display: flex; gap: 12px; align-items: center; }
+.dash-brand h1 { margin: 0; font-size: 22px; }
+.dash-brand span { color: rgba(238,240,246,.6); font-size: 12.5px; }
+.dash-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.dash-actions input { font: inherit; min-width: 260px; padding: 9px 12px; border-radius: 6px; border: 1px solid rgba(184,156,94,.6); background: rgba(11,15,46,.7); color: #fff; outline: none; }
+.btn { font: inherit; font-weight: 600; font-size: 13px; padding: 9px 14px; border-radius: 6px; border: 1px solid transparent; cursor: pointer; text-decoration: none; display: inline-block; line-height: 1.2; }
+.btn.gold { background: #b89c5e; color: #0b0f2e; }
+.btn.ghost { background: transparent; border-color: rgba(238,240,246,.3); color: #eef0f6; }
+.btn.danger { background: transparent; border-color: rgba(226,114,91,.6); color: #ffb4a3; padding: 6px 10px; font-size: 12px; }
+.btn:hover { filter: brightness(1.1); }
+.table-wrap { overflow-x: auto; background: rgba(20,26,74,.55); border: 1px solid rgba(184,156,94,.3); border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid rgba(238,240,246,.08); vertical-align: top; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: #b89c5e; background: rgba(11,15,46,.6); position: sticky; top: 0; }
+tbody tr:hover { background: rgba(184,156,94,.06); }
+td a { color: #d4bf8e; text-decoration: none; }
+td a:hover { text-decoration: underline; }
+.nowrap { white-space: nowrap; }
+.wrap { min-width: 220px; max-width: 420px; white-space: pre-wrap; word-break: break-word; }
+.muted { color: rgba(238,240,246,.55); font-size: 12.5px; }
+.empty { text-align: center; padding: 40px; color: rgba(238,240,246,.6); }
+@media (max-width: 640px) {
+  .dash-actions input { min-width: 0; width: 100%; }
+  thead { display: none; }
+  table, tbody, tr, td { display: block; width: 100%; }
+  tr { border-bottom: 1px solid rgba(238,240,246,.12); padding: 8px 0; }
+  td { border: 0; padding: 4px 14px; }
+  td[data-label]::before { content: attr(data-label) ": "; color: #b89c5e; font-size: 11px; text-transform: uppercase; display: block; }
+}
+
+/* Instalar app (PWA) */
+.install-wrap { position: relative; display: inline-flex; flex-direction: column; align-items: center; gap: 8px; }
+.install-help { display: block; max-width: 280px; font-size: 13px; line-height: 1.4; color: #eef0f6; background: rgba(11,15,46,.9); border: 1px solid rgba(184,156,94,.5); border-radius: 8px; padding: 10px 12px; text-align: center; }
+.dash-actions .install-help { position: absolute; top: calc(100% + 6px); right: 0; z-index: 5; width: 260px; }
+.login-install { margin-top: 4px; }
+.login-install .btn { width: auto; background: transparent; border: 1px solid rgba(238,240,246,.3); color: #eef0f6; }
+@media (display-mode: standalone) { .admin-root { padding-top: env(safe-area-inset-top); } }
