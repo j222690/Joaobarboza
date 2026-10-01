@@ -46,12 +46,12 @@ Sem `KV_REST_API_URL`/`KV_REST_API_TOKEN` as aplicações ficam em `.data/applic
 2. Clique em **Create Database** (ou **Browse Marketplace**) e escolha **Upstash → Redis** (Serverless DB).
 3. Escolha a região mais próxima do público (ex.: `São Paulo, Brazil (gru1)` se disponível, ou `Washington, D.C. (iad1)`) e o plano (o **Free** atende bem uma landing page).
 4. Em **Connect Project**, selecione este projeto e marque os ambientes **Production**, **Preview** e **Development**.
-5. A Vercel cria automaticamente as variáveis `KV_REST_API_URL` e `KV_REST_API_TOKEN` (em algumas contas aparecem como `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` – o código aceita os dois formatos).
+5. A Vercel cria automaticamente as variáveis `KV_REST_API_URL` e `KV_REST_API_TOKEN` (em algumas contas aparecem como `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` – o código aceita os dois formatos). Se você definir um **prefixo personalizado** ao conectar (ex.: `STORAGE` → `STORAGE_KV_REST_API_URL` / `STORAGE_KV_REST_API_TOKEN`), o código também encontra sozinho.
 6. Faça um **Redeploy** (Deployments → ⋯ → Redeploy) para que as variáveis passem a valer.
 
 No painel `/paineljbadmin` aparece “armazenamento: upstash” quando a conexão está ativa. Se aparecer “arquivo-local” em produção, as variáveis do Upstash não foram carregadas – **nesse caso os dados não ficam salvos de forma permanente**.
 
-Estrutura dos dados no Redis: hash `jb:applications:data` (id → JSON) + sorted set `jb:applications:index` (ordenado pela data).
+Estrutura dos dados no Redis: hash `jb:applications:data` (id → JSON) + sorted set `jb:applications:index` (ordenado pela data). A chave `jb:keepalive` guarda só a data/hora da última execução do cron (item 4.1).
 
 ---
 
@@ -65,10 +65,22 @@ Configure em **Project → Settings → Environment Variables** (marque Producti
 | `ADMIN_SECRET` | Sim (produção) | Segredo usado para assinar o cookie de sessão. Mínimo 16 caracteres; recomendado 32+ aleatórios. Gere com `openssl rand -base64 32`. |
 | `KV_REST_API_URL` / `KV_REST_API_TOKEN` | Automática | Criadas pela integração do Upstash (item 3). |
 | `NEXT_PUBLIC_SITE_URL` | Opcional | URL final (ex.: `https://www.dominio.com.br`) usada nas meta tags de compartilhamento. |
+| `CRON_SECRET` | Opcional (recomendada) | Protege a rota do cron (item 4.1). Gere com `openssl rand -hex 32`. |
 
 Depois de criar/alterar variáveis, faça **Redeploy**.
 
 Trocar a `ADMIN_PASSWORD` ou o `ADMIN_SECRET` desconecta todas as sessões abertas do painel.
+
+### 4.1. Cron diário (mantém o Upstash gratuito ativo)
+
+O plano gratuito do Upstash **arquiva o banco depois de 30 dias sem uso**. Para isso nunca acontecer (por exemplo, numa fase sem nenhuma aplicação nova), o projeto tem um **Vercel Cron** que roda **1 vez por dia**:
+
+- Configuração: `vercel.json` → `"crons": [{ "path": "/api/cron/keepalive", "schedule": "17 9 * * *" }]` (09:17 UTC ≈ 06:17 no horário de Brasília). No plano **Hobby** a Vercel permite 1 execução por dia e pode atrasar até ~1 hora; tudo bem.
+- Rota: `app/api/cron/keepalive/route.ts` grava a data/hora atual na chave `jb:keepalive` e lê de volta (custa 2 comandos por dia). Resposta: `{"ok":true,"storage":"upstash","at":"2026-10-01T09:17:03.123Z"}`.
+- **`CRON_SECRET` (opcional, recomendado):** crie a variável em *Settings → Environment Variables* (Production) com um valor aleatório e faça Redeploy. A Vercel envia automaticamente `Authorization: Bearer <CRON_SECRET>` nas chamadas do cron e a rota recusa (401) qualquer outra chamada. Sem a variável, a rota fica aberta (ela só faz esse SET/GET inofensivo).
+- **Como conferir:** *Project → Settings → Cron Jobs* mostra o job `/api/cron/keepalive` e o horário; ali há o botão **Run** para executar na hora e o link **View Logs**. Nos logs (*Project → Logs*, filtrando por `/api/cron/keepalive`) aparece `[keepalive] ok …`. Se aparecer `storage: "arquivo-local"`, as variáveis do Upstash não estão chegando ao projeto (veja o item 3).
+- O cron só roda no deploy de **Production** (não em Preview).
+- Teste manual: `curl -H "Authorization: Bearer SEU_CRON_SECRET" https://SEU-DOMINIO/api/cron/keepalive`.
 
 ---
 
@@ -126,6 +138,7 @@ Campos (idênticos à página de referência): **Nome**, **Email**, **Whatsapp c
 | Link do Instagram (rodapé) | `lib/site.ts` (atual: https://www.instagram.com/joaobarboza.oficial/) |
 | Painel (páginas, API, PWA) | `app/paineljbadmin/` |
 | Armazenamento | `lib/storage.ts` |
+| Cron keep-alive | `app/api/cron/keepalive/route.ts` + `vercel.json` |
 
 ---
 

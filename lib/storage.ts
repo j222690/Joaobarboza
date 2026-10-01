@@ -7,10 +7,33 @@ import type { Application } from "./types";
 const DATA_KEY = "jb:applications:data"; // hash id -> JSON
 const INDEX_KEY = "jb:applications:index"; // sorted set (score = timestamp)
 
-function redisConfig() {
-  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
-  return url && token ? { url, token } : null;
+/**
+ * Descobre as credenciais REST do Upstash. Ordem:
+ * 1. KV_REST_API_URL / KV_REST_API_TOKEN (integração Upstash do Vercel Marketplace)
+ * 2. UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN (nomes padrão do Upstash)
+ * 3. Qualquer par com prefixo personalizado, ex.: STORAGE_KV_REST_API_URL / STORAGE_KV_REST_API_TOKEN
+ *    (a Vercel permite definir um prefixo ao conectar o banco ao projeto).
+ * O token somente-leitura (KV_REST_API_READ_ONLY_TOKEN) nunca é usado, porque precisamos gravar.
+ */
+function redisConfig(): { url: string; token: string } | null {
+  const env = process.env;
+  const pairs: [string, string][] = [
+    ["KV_REST_API_URL", "KV_REST_API_TOKEN"],
+    ["UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN"],
+  ];
+  for (const [u, t] of pairs) {
+    if (env[u] && env[t]) return { url: env[u]!, token: env[t]! };
+  }
+  // Fallback: variáveis com prefixo (mesmo prefixo para URL e token)
+  for (const [uSuffix, tSuffix] of pairs) {
+    for (const key of Object.keys(env).sort()) {
+      if (key === uSuffix || !key.endsWith(uSuffix) || !env[key]) continue;
+      const prefix = key.slice(0, -uSuffix.length);
+      const token = env[prefix + tSuffix];
+      if (token) return { url: env[key]!, token };
+    }
+  }
+  return null;
 }
 
 let redis: Redis | null = null;
@@ -23,6 +46,24 @@ function getRedis(): Redis | null {
 
 export function storageMode(): "upstash" | "arquivo-local" {
   return redisConfig() ? "upstash" : "arquivo-local";
+}
+
+// ---------- Keep-alive (cron diário) ----------
+const KEEPALIVE_KEY = "jb:keepalive";
+
+/**
+ * Gravação + leitura bem baratas para manter o banco Upstash "ativo"
+ * (o plano gratuito arquiva bancos sem uso por 30 dias).
+ */
+export async function keepAlive(): Promise<{ storage: ReturnType<typeof storageMode>; at: string; readBack: string | null }> {
+  const at = new Date().toISOString();
+  const r = getRedis();
+  if (r) {
+    await r.set(KEEPALIVE_KEY, at);
+    const readBack = await r.get<string>(KEEPALIVE_KEY);
+    return { storage: "upstash", at, readBack: readBack ?? null };
+  }
+  return { storage: "arquivo-local", at, readBack: null };
 }
 
 // ---------- Fallback local (arquivo JSON) ----------
