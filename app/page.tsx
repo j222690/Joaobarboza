@@ -19,10 +19,10 @@ const HERO = { base: "/img/hero-v3", widths: [480, 768, 1080, 1440, 1920], sizes
 
 // Números que já aparecem na página (copy e depoimentos) — nada inventado.
 const stats = [
-  { value: "+300", label: "clientes" },
+  { value: "+300", label: "cases de sucesso" },
   { value: "3 a 5", label: "vendas por semana" },
   { value: <><small>R$</small> 3 a 20 mil</>, label: "em tickets por venda" },
-  { value: <><small>R$</small> 569 mil</>, label: "faturados por um mentorado" },
+  { value: <><small>R$</small> 569 mil</>, label: "mentorado com faturamento até" },
 ];
 
 function Ornament() {
