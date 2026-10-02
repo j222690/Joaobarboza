@@ -1,9 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useRef } from "react";
 
-export type Slide = { src: string; width: number; height: number; alt: string; caption?: string };
+/** `src`: prefixo do arquivo (ex.: /img/dep1-v3); `widths`: larguras pré-geradas (`${src}-${w}.webp`). */
+export type Slide = { src: string; widths: number[]; width: number; height: number; alt: string; caption?: string };
+
+// Mesmo `sizes` + mesmo `srcset` em todas as cópias => o navegador escolhe o mesmo arquivo e baixa 1 vez só.
+const SIZES = "(max-width: 767px) 64vw, (max-width: 1023px) 32vw, 17vw";
 
 const COPIES = 3; // 3 cópias garantem que nunca aparece "buraco" ao arrastar/avançar
 const RESUME_AFTER_MS = 2500;
@@ -153,16 +156,22 @@ export default function Carousel({ slides }: { slides: Slide[] }) {
         <div className="carousel-track" style={{ ["--n" as string]: slides.length }}>
           {all.map((s) => (
             <figure className="slide" key={`${s.copy}-${s.src}`} aria-hidden={s.copy > 0 ? true : undefined}>
-              <Image
-                src={s.src}
-                width={s.width}
-                height={s.height}
-                alt={s.copy > 0 ? "" : s.alt}
-                sizes="(max-width: 767px) 80vw, (max-width: 1023px) 42vw, 24vw"
-                quality={90}
-                loading="lazy"
-                draggable={false}
-              />
+              <div className="phone">
+                <div className="phone-screen">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`${s.src}-${s.widths[s.widths.length - 1]}.webp`}
+                    srcSet={s.widths.map((w) => `${s.src}-${w}.webp ${w}w`).join(", ")}
+                    sizes={SIZES}
+                    width={s.width}
+                    height={s.height}
+                    alt={s.copy > 0 ? "" : s.alt}
+                    loading="lazy"
+                    decoding="async"
+                    draggable={false}
+                  />
+                </div>
+              </div>
               {s.caption && <figcaption>{s.caption}</figcaption>}
             </figure>
           ))}

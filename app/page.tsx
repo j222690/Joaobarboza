@@ -1,4 +1,5 @@
-import Image from "next/image";
+import { preload } from "react-dom";
+import Picture, { srcSet } from "@/components/Picture";
 import ApplicationForm from "@/components/ApplicationForm";
 import Carousel, { type Slide } from "@/components/Carousel";
 import ScrollToForm from "@/components/ScrollToForm";
@@ -6,13 +7,31 @@ import { ArrowCircle, Instagram, XBox } from "@/components/Icons";
 import { SOCIAL } from "@/lib/site";
 
 const depoimentos: Slide[] = [
-  { src: "/img/depoimento-1-hq.webp", width: 960, height: 599, alt: "Depoimento de Leila Chaves no WhatsApp", caption: "Duas reuniões e duas vendas fechadas" },
-  { src: "/img/depoimento-2-hq.webp", width: 768, height: 960, alt: "Depoimento de Camilla Simões no WhatsApp", caption: "R$ 25k faturados em 15 dias" },
-  { src: "/img/depoimento-3-hq.webp", width: 768, height: 655, alt: "Depoimento de Halyna Savio no WhatsApp", caption: "R$ 30k em vendas em menos de 2 meses" },
-  { src: "/img/depoimento-4-hq.webp", width: 960, height: 786, alt: "Depoimento de Camilla Simões no WhatsApp", caption: "Cerca de R$ 180k em 6 meses" },
-  { src: "/img/depoimento-5-hq.webp", width: 649, height: 960, alt: "Depoimento de Rodrigo Godoi no WhatsApp", caption: "Feedback após a primeira reunião" },
-  { src: "/img/depoimento-6-hq.webp", width: 535, height: 454, alt: "Depoimento de Diego Ferrazzo no WhatsApp", caption: "R$ 569k faturados desde janeiro" },
+  { src: "/img/dep1-v3", widths: [360, 540, 720], width: 960, height: 599, alt: "Depoimento de Leila Chaves no WhatsApp", caption: "Duas reuniões e duas vendas fechadas" },
+  { src: "/img/dep2-v3", widths: [360, 540, 720], width: 768, height: 960, alt: "Depoimento de Camilla Simões no WhatsApp", caption: "R$ 25k faturados em 15 dias" },
+  { src: "/img/dep3-v3", widths: [360, 540, 720], width: 768, height: 655, alt: "Depoimento de Halyna Savio no WhatsApp", caption: "R$ 30k em vendas em menos de 2 meses" },
+  { src: "/img/dep4-v3", widths: [360, 540, 720], width: 960, height: 786, alt: "Depoimento de Camilla Simões no WhatsApp", caption: "Cerca de R$ 180k em 6 meses" },
+  { src: "/img/dep5-v3", widths: [360, 540, 649], width: 649, height: 960, alt: "Depoimento de Rodrigo Godoi no WhatsApp", caption: "Feedback após a primeira reunião" },
+  { src: "/img/dep6-v3", widths: [360, 535], width: 535, height: 454, alt: "Depoimento de Diego Ferrazzo no WhatsApp", caption: "R$ 569k faturados desde janeiro" },
 ];
+
+const HERO = { base: "/img/hero-v3", widths: [480, 768, 1080, 1440, 1920], sizes: "(max-width: 1023px) 100vw, 56vw" };
+
+// Números que já aparecem na página (copy e depoimentos) — nada inventado.
+const stats = [
+  { value: "+300", label: "clientes" },
+  { value: "3 a 5", label: "vendas por semana" },
+  { value: <><small>R$</small> 3 a 20 mil</>, label: "em tickets por venda" },
+  { value: <><small>R$</small> 569 mil</>, label: "faturados por um mentorado" },
+];
+
+function Ornament() {
+  return (
+    <div className="ornament" aria-hidden="true">
+      <span />
+    </div>
+  );
+}
 
 function Social({ href, label, children }: { href: string; label: string; children: React.ReactNode }) {
   return (
@@ -23,19 +42,29 @@ function Social({ href, label, children }: { href: string; label: string; childr
 }
 
 export default function Home() {
+  // Pré-carrega a foto do topo (LCP) já no <head>, em AVIF, com prioridade alta.
+  preload(`${HERO.base}-1080.avif`, {
+    as: "image",
+    type: "image/avif",
+    fetchPriority: "high",
+    imageSrcSet: srcSet(HERO.base, HERO.widths, "avif"),
+    imageSizes: HERO.sizes,
+  });
   return (
     <main className="lp">
+      {/* Hero + faixa de números juntos ocupam a 1ª tela no desktop (ver .fold no CSS) */}
+      <div className="fold">
       {/* ============ HERO ============ */}
       <section className="hero">
         <div className="hero-photo">
-          <Image src="/img/joao-hero-hq.webp" alt="João Barboza palestrando" fill preload fetchPriority="high" loading="eager" quality={90} sizes="(max-width: 767px) 100vw, 48vw" />
+          <Picture {...HERO} alt="João Barboza palestrando" width={2144} height={2560} priority />
         </div>
         <div className="hero-content">
           <div className="brand">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/img/jb-crest-180.webp" alt="" width={180} height={233} className="brand-crest" decoding="async" />
+            <img src="/img/jb-crest-v3-100.webp" alt="" width={100} height={129} className="brand-crest" decoding="async" fetchPriority="low" />
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/img/jb-wordmark.webp" alt="João Barboza" width={978} height={142} className="brand-word" decoding="async" />
+            <img src="/img/jb-wordmark.webp" alt="João Barboza" width={978} height={142} className="brand-word" decoding="async" fetchPriority="low" />
           </div>
           <hr className="rule" />
           <h1 className="hero-title">
@@ -47,6 +76,19 @@ export default function Home() {
           <hr className="rule" />
         </div>
       </section>
+
+      {/* ============ FAIXA DE NÚMEROS ============ */}
+      <section className="stats" aria-label="Resultados em números">
+        <ul className="stats-list">
+          {stats.map((st, i) => (
+            <li key={i}>
+              <span className="stats-value">{st.value}</span>
+              <span className="stats-label">{st.label}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+      </div>
 
       {/* ============ INTRO + NÚMEROS ============ */}
       <section className="intro">
@@ -82,6 +124,8 @@ export default function Home() {
         </div>
       </section>
 
+      <Ornament />
+
       {/* ============ PARA QUEM ============ */}
       <section className="forwho">
         <div className="container-wide">
@@ -96,6 +140,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <Ornament />
 
       {/* ============ RESULTADOS ============ */}
       <section className="results">
@@ -143,7 +189,6 @@ export default function Home() {
 
       {/* ============ EVITAR ============ */}
       <section className="evitar">
-        <Image src="/img/jb-crest-wm.webp" alt="" width={640} height={827} className="evitar-mark" aria-hidden="true" loading="lazy" unoptimized />
         <div className="evitar-content">
           <p>
             Evitar fazer esse tipo de estratégia que a maioria do mercado faz vai deixar o seu negócio <span className="gold">mais simples</span>,{" "}
@@ -159,12 +204,13 @@ export default function Home() {
             <span className="gold">3 a 5 vendas todas as semanas</span> com clientes que virão do Instagram.
           </p>
         </div>
+        <Ornament />
       </section>
 
       {/* ============ CTA FINAL ============ */}
       <section className="cta">
         <div className="cta-photo">
-          <Image src="/img/joao-gesture-hq.webp" alt="João Barboza em palestra" fill quality={90} sizes="(max-width: 767px) 100vw, 40vw" />
+          <Picture base="/img/cta-v3" widths={[480, 768, 1080, 1440]} sizes="(max-width: 1023px) 100vw, 40vw" alt="João Barboza em palestra" width={1920} height={1494} />
         </div>
         <div className="cta-inner">
           <div className="cta-card">
@@ -181,7 +227,7 @@ export default function Home() {
       <footer className="footer">
         <p className="footer-name">João Barboza</p>
         <p className="footer-rights">Todos os direitos reservados</p>
-        <hr />
+        <Ornament />
         <div className="footer-social">
           <Social href={SOCIAL.instagram} label="Instagram"><Instagram /></Social>
         </div>

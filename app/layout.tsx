@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope, Instrument_Serif } from "next/font/google";
+import { Manrope, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
-const manrope = Manrope({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700", "800"], variable: "--font-sans", display: "swap" });
-const serif = Instrument_Serif({ subsets: ["latin"], weight: "400", variable: "--font-serif", display: "swap", preload: false });
+// 2 famílias no total: Manrope (variável, texto) + Playfair Display 500 (títulos/números, 1 arquivo só).
+// (Cormorant foi testada, mas o circunflexo dela fica deslocado em "você", "três"... — ruim para PT-BR.)
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
+const serif = Playfair_Display({ subsets: ["latin"], weight: "500", variable: "--font-serif", display: "swap", preload: false });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000");
 

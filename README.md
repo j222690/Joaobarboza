@@ -134,7 +134,7 @@ Campos (idênticos à página de referência): **Nome**, **Email**, **Whatsapp c
 | Textos da página | `app/page.tsx` |
 | Legendas dos depoimentos | array `depoimentos` em `app/page.tsx` |
 | Cores, espaçamentos, responsivo | `app/globals.css` (variáveis no topo: `--bg`, `--gold`…) |
-| Imagens (fotos, depoimentos, logo) | `public/img/` (WebP otimizados) |
+| Imagens (fotos, depoimentos, logo) | `public/img/` (AVIF/WebP já redimensionados; ver “Performance”) |
 | Link do Instagram (rodapé) | `lib/site.ts` (atual: https://www.instagram.com/joaobarboza.oficial/) |
 | Painel (páginas, API, PWA) | `app/paineljbadmin/` |
 | Armazenamento | `lib/storage.ts` |
@@ -145,6 +145,11 @@ Campos (idênticos à página de referência): **Nome**, **Email**, **Whatsapp c
 ## Performance
 
 - Só o formulário, o carrossel e o painel usam JavaScript no navegador; o resto é renderizado no servidor (os botões “Saber Mais”/“Quero ser o próximo” são âncoras puras com rolagem suave via CSS).
-- Imagens via `next/image` com `srcset`/`sizes` corretos (WebP, qualidade 90); só a foto do topo tem prioridade (`preload` + `fetchPriority="high"`); o resto é *lazy*.
+- A página `/` é 100% estática (aparece como `○ /` no `npm run build`): o HTML sai pronto da CDN da Vercel, sem servidor/cold start.
+- Imagens **estáticas e pré-dimensionadas** em `public/img/` (AVIF com WebP de reserva via `<picture>`, várias larguras + `srcset`/`sizes`). Não há otimização sob demanda da Vercel (`images.unoptimized`), então não existe latência de “primeira otimização” nem consumo da cota de Image Optimization do plano Hobby.
+- Só a foto do topo tem prioridade (`preload` + `fetchPriority="high"`); o resto é *lazy*. Os depoimentos usam o mesmo `srcset`/`sizes` nas cópias do carrossel, então cada print baixa uma única vez.
+- `/img/*` é servido com `Cache-Control: public, max-age=31536000, immutable` (next.config.ts). **Ao trocar uma imagem, salve com um nome novo** (ex.: `hero-v4-1080.avif`) e atualize a referência; se sobrescrever o mesmo nome, quem já visitou pode continuar vendo a antiga.
+- Fontes: 2 famílias via `next/font` (auto-hospedadas, subset latin, `display: swap`): Manrope variável (texto, pré-carregada) e Playfair Display 500 (títulos/números, sem preload).
+- Marca-d'água do brasão: 1 arquivo pequeno (`jb-mark-v3.webp`, 13 KB) reutilizado como `background` em CSS em várias seções.
 - Seções abaixo da dobra usam `content-visibility: auto` (o navegador só desenha quando chegam perto da tela).
 - Carrossel de depoimentos: animação contínua 100% CSS (`transform`, GPU), pausa ao passar o mouse/tocar, aceita arrastar/swipe e respeita `prefers-reduced-motion`.
