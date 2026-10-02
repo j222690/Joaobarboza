@@ -22,7 +22,7 @@ const stats = [
   { value: "+300", label: "cases de sucesso" },
   { value: "3 a 5", label: "vendas por semana" },
   { value: <><small>R$</small> 3 a 20 mil</>, label: "em tickets por venda" },
-  { value: "Até 569 mil", label: "faturados por um mentorado" },
+  { value: "Até 569 mil", label: "faturado por um mentorado" },
 ];
 
 function Ornament() {
